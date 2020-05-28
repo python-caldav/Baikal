@@ -1,11 +1,12 @@
 <?php
+
 #################################################################
 #  Copyright notice
 #
 #  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 #  All rights reserved
 #
-#  http://baikal-server.com
+#  http://sabre.io/baikal
 #
 #  This script is part of the Baïkal Server project. The Baïkal
 #  Server project is free software; you can redistribute it
@@ -24,8 +25,9 @@
 #  This copyright notice MUST APPEAR in all copies of the script!
 #################################################################
 
-
 namespace Baikal\Model;
+
+use Symfony\Component\Yaml\Yaml;
 
 class User extends \Flake\Core\Model\Db {
     const DATATABLE = "users";
@@ -77,7 +79,6 @@ class User extends \Flake\Core\Model\Db {
     }
 
     function get($sPropName) {
-
         if ($sPropName === "password" || $sPropName === "passwordconfirm") {
             # Special handling for password and passwordconfirm
             return "";
@@ -99,7 +100,6 @@ class User extends \Flake\Core\Model\Db {
     }
 
     function set($sPropName, $sPropValue) {
-
         if ($sPropName === "password" || $sPropName === "passwordconfirm") {
             # Special handling for password and passwordconfirm
 
@@ -127,7 +127,6 @@ class User extends \Flake\Core\Model\Db {
     }
 
     function persist() {
-
         $bFloating = $this->floating();
 
         # Persisted first, as Model users loads this data
@@ -137,7 +136,6 @@ class User extends \Flake\Core\Model\Db {
         parent::persist();
 
         if ($bFloating) {
-
             # Creating default calendar for user
             $oDefaultCalendar = new \Baikal\Model\Calendar();
             $oDefaultCalendar->set(
@@ -211,7 +209,7 @@ class User extends \Flake\Core\Model\Db {
             "validation" => "required,unique",
             "popover"    => [
                 "title"   => "Username",
-                "content" => "The login for this user account.<br />It has to be unique.",
+                "content" => "The login for this user account. It has to be unique.",
             ]
         ]));
 
@@ -279,6 +277,12 @@ class User extends \Flake\Core\Model\Db {
     }
 
     function getPasswordHashForPassword($sPassword) {
-        return md5($this->get("username") . ':' . BAIKAL_AUTH_REALM . ':' . $sPassword);
+        try {
+            $config = Yaml::parseFile(PROJECT_PATH_CONFIG . "baikal.yaml");
+        } catch (\Exception $e) {
+            error_log('Error reading baikal.yaml file : ' . $e->getMessage());
+        }
+
+        return md5($this->get("username") . ':' . $config['system']['auth_realm'] . ':' . $sPassword);
     }
 }

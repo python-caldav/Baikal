@@ -1,11 +1,12 @@
 <?php
+
 #################################################################
 #  Copyright notice
 #
 #  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 #  All rights reserved
 #
-#  http://baikal-server.com
+#  http://sabre.io/baikal
 #
 #  This script is part of the Baïkal Server project. The Baïkal
 #  Server project is free software; you can redistribute it
@@ -24,12 +25,20 @@
 #  This copyright notice MUST APPEAR in all copies of the script!
 #################################################################
 
-
 namespace BaikalAdmin\Controller;
 
 class Users extends \Flake\Core\Controller {
-
     protected $aMessages = [];
+
+    /**
+     * @var \Baikal\Model\User
+     */
+    private $oModel;
+
+    /**
+     * @var \Formal\Form
+     */
+    private $oForm;
 
     function execute() {
         if ($this->actionEditRequested()) {
@@ -46,7 +55,6 @@ class Users extends \Flake\Core\Controller {
     }
 
     function render() {
-
         $oView = new \BaikalAdmin\View\Users();
 
         # List of users
@@ -149,9 +157,8 @@ class Users extends \Flake\Core\Controller {
         $iUser = intval($aParams["delete"]);
 
         if ($this->actionDeleteConfirmed() !== false) {
-
             # catching Exception thrown when model already destroyed
-                # happens when user refreshes delete-page, for instance
+            # happens when user refreshes delete-page, for instance
 
             try {
                 $oUser = new \Baikal\Model\User($iUser);
@@ -163,7 +170,6 @@ class Users extends \Flake\Core\Controller {
             # Redirecting to admin home
             \Flake\Util\Tools::redirectUsingMeta($this->link());
         } else {
-
             $oUser = new \Baikal\Model\User($iUser);
             $this->aMessages[] = \Formal\Core\Message::warningConfirmMessage(
                 "Check twice, you're about to delete " . $oUser->label() . "</strong> from the database !",

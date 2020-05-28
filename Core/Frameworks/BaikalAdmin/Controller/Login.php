@@ -1,11 +1,12 @@
 <?php
+
 #################################################################
 #  Copyright notice
 #
 #  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 #  All rights reserved
 #
-#  http://baikal-server.com
+#  http://sabre.io/baikal
 #
 #  This script is part of the Baïkal Server project. The Baïkal
 #  Server project is free software; you can redistribute it
@@ -24,11 +25,9 @@
 #  This copyright notice MUST APPEAR in all copies of the script!
 #################################################################
 
-
 namespace BaikalAdmin\Controller;
 
 class Login extends \Flake\Core\Controller {
-
     function execute() {
     }
 
@@ -37,7 +36,15 @@ class Login extends \Flake\Core\Controller {
         $sSubmittedFlagName = "auth";
         $sMessage = "";
 
+        $sLogin = htmlspecialchars(\Flake\Util\Tools::POST("login"));
+
         if (self::isSubmitted() && !\BaikalAdmin\Core\Auth::isAuthenticated()) {
+            // Log failed accesses, matching the default fail2ban nginx/apache auth rules
+            if (isset($_SERVER['SERVER_SOFTWARE']) && preg_match('/nginx/i', $_SERVER['SERVER_SOFTWARE'])) {
+                error_log('user "' . $sLogin . '" was not found in "Baikal GUI"', 4);
+            } else {
+                error_log('user "' . $sLogin . '" authentication failure for "Baikal GUI"', 4);
+            }
             $sMessage = \Formal\Core\Message::error(
                 "The login/password you provided is invalid. Please retry.",
                 "Authentication error"
@@ -50,7 +57,6 @@ class Login extends \Flake\Core\Controller {
             );
         }
 
-        $sLogin = htmlspecialchars(\Flake\Util\Tools::POST("login"));
         $sPassword = htmlspecialchars(\Flake\Util\Tools::POST("password"));
 
         if (trim($sLogin) === "") {
@@ -73,6 +79,7 @@ class Login extends \Flake\Core\Controller {
 
     protected static function justLoggedOut() {
         $aParams = $GLOBALS["ROUTER"]::getURLParams();
+
         return (!empty($aParams) && $aParams[0] === "loggedout");
     }
 }

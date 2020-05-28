@@ -1,11 +1,12 @@
 <?php
+
 #################################################################
 #  Copyright notice
 #
 #  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 #  All rights reserved
 #
-#  http://baikal-server.com
+#  http://sabre.io/baikal
 #
 #  This script is part of the Baïkal Server project. The Baïkal
 #  Server project is free software; you can redistribute it
@@ -24,13 +25,21 @@
 #  This copyright notice MUST APPEAR in all copies of the script!
 #################################################################
 
-
 namespace BaikalAdmin\Controller\Settings;
 
 class Standard extends \Flake\Core\Controller {
+    /**
+     * @var \Baikal\Model\Config\Standard
+     */
+    private $oModel;
+
+    /**
+     * @var \Formal\Form
+     */
+    private $oForm;
 
     function execute() {
-        $this->oModel = new \Baikal\Model\Config\Standard(PROJECT_PATH_SPECIFIC . "config.php");
+        $this->oModel = new \Baikal\Model\Config\Standard();
 
         # Assert that config file is writable
         if (!$this->oModel->writable()) {
@@ -47,7 +56,6 @@ class Standard extends \Flake\Core\Controller {
     }
 
     function render() {
-
         $oView = new \BaikalAdmin\View\Settings\Standard();
         $oView->setData("form", $this->oForm->render());
 

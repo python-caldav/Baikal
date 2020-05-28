@@ -5,7 +5,7 @@
 *  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 *  All rights reserved
 *
-*  http://baikal-server.com
+*  http://sabre.io/baikal
 *
 *  This script is part of the Baïkal Server project. The Baïkal
 *  Server project is free software; you can redistribute it
@@ -40,7 +40,7 @@ if (file_exists(getcwd() . "/Core")) {
 }
 
 if (!file_exists(PROJECT_PATH_ROOT . 'vendor/')) {
-    die('<h1>Incomplete installation</h1><p>Ba&iuml;kal dependencies have not been installed. Please, execute "<strong>composer install</strong>" in the folder where you installed Ba&iuml;kal.');
+    die('<h1>Incomplete installation</h1><p>Ba&iuml;kal dependencies have not been installed. If you are a regular user, this means that you probably downloaded the wrong zip file.</p><p>To install the dependencies manually, execute "<strong>composer install</strong>" in the Ba&iuml;kal root folder.</p>');
 }
 
 require PROJECT_PATH_ROOT . 'vendor/autoload.php';
@@ -49,16 +49,17 @@ require PROJECT_PATH_ROOT . 'vendor/autoload.php';
 \Flake\Framework::bootstrap();
 
 # Bootstrapping Baïkal
-\Baikal\Framework::bootstrap();
+\BaikalAdmin\Framework::bootstrap();
 
-?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-	<title>Baïkal Server</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
-</head>
-<body>
-	<h2>Baïkal is running alright.</h2>
-</body>
-</html>
+# Create and setup a page object
+$oPage = new \Flake\Controller\Page(PROJECT_PATH_ROOT . "Core/Resources/Web/Baikal/Templates/Page/index.html");
+$oPage->injectHTTPHeaders();
+$oPage->setTitle("Baïkal server");
+$oPage->setBaseUrl(PROJECT_URI);
+
+# Draw page
+$oPage->zone("navbar")->addBlock(new \Baikal\Controller\Navigation\Topbar\Anonymous());
+$oPage->zone("Payload")->addBlock(new \Baikal\Controller\Main());
+
+# Render the page
+echo $oPage->render();

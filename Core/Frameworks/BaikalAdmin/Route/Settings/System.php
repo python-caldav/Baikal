@@ -1,11 +1,12 @@
 <?php
+
 #################################################################
 #  Copyright notice
 #
 #  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 #  All rights reserved
 #
-#  http://baikal-server.com
+#  http://sabre.io/baikal
 #
 #  This script is part of the Baïkal Server project. The Baïkal
 #  Server project is free software; you can redistribute it
@@ -24,11 +25,9 @@
 #  This copyright notice MUST APPEAR in all copies of the script!
 #################################################################
 
-
 namespace BaikalAdmin\Route\Settings;
 
 class System extends \Flake\Core\Route {
-
     static function layout(\Flake\Core\Render\Container &$oRenderContainer) {
         $oRenderContainer->zone("Payload")->addBlock(new \BaikalAdmin\Controller\Settings\System());
     }

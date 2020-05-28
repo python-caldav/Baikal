@@ -1,11 +1,12 @@
 <?php
+
 #################################################################
 #  Copyright notice
 #
 #  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 #  All rights reserved
 #
-#  http://baikal-server.com
+#  http://sabre.io/baikal
 #
 #  This script is part of the Baïkal Server project. The Baïkal
 #  Server project is free software; you can redistribute it
@@ -24,11 +25,12 @@
 #  This copyright notice MUST APPEAR in all copies of the script!
 #################################################################
 
-
 namespace Baikal\Model;
 
+use Symfony\Component\Yaml\Yaml;
+
 class Calendar extends \Flake\Core\Model\Db {
-    const DATATABLE = "calendars";
+    const DATATABLE = "calendarinstances";
     const PRIMARYKEY = "id";
     const LABELFIELD = "displayname";
 
@@ -39,9 +41,36 @@ class Calendar extends \Flake\Core\Model\Db {
         "description"   => "",
         "calendarorder" => 0,
         "calendarcolor" => "",
-        "timezone"      => "",
-        "components"    => "",
+        "timezone"      => null,
+        "calendarid"    => 0
     ];
+    protected $oCalendar; # Baikal\Model\Calendar\Calendar
+
+    function __construct($sPrimary = false) {
+        parent::__construct($sPrimary);
+        try {
+            $config = Yaml::parseFile(PROJECT_PATH_CONFIG . "baikal.yaml");
+            $this->set("timezone", $config['system']["timezone"]);
+        } catch (\Exception $e) {
+            error_log('Error reading baikal.yaml file : ' . $e->getMessage());
+        }
+    }
+
+    protected function initFloating() {
+        parent::initFloating();
+        $this->oCalendar = new Calendar\Calendar();
+    }
+
+    protected function initByPrimary($sPrimary) {
+        parent::initByPrimary($sPrimary);
+        $this->oCalendar = new Calendar\Calendar($this->get("calendarid"));
+    }
+
+    function persist() {
+        $this->oCalendar->persist();
+        $this->aData["calendarid"] = $this->oCalendar->get("id");
+        parent::persist();
+    }
 
     static function icon() {
         return "icon-calendar";
@@ -59,13 +88,16 @@ class Calendar extends \Flake\Core\Model\Db {
         $oBaseRequester = \Baikal\Model\Calendar\Event::getBaseRequester();
         $oBaseRequester->addClauseEquals(
             "calendarid",
-            $this->get("id")
+            $this->get("calendarid")
         );
 
         return $oBaseRequester;
     }
 
     function get($sPropName) {
+        if ($sPropName === "components") {
+            return $this->oCalendar->get($sPropName);
+        }
 
         if ($sPropName === "todos") {
             # TRUE if components contains VTODO, FALSE otherwise
@@ -93,9 +125,11 @@ class Calendar extends \Flake\Core\Model\Db {
     }
 
     function set($sPropName, $sValue) {
+        if ($sPropName === "components") {
+            return $this->oCalendar->set($sPropName, $sValue);
+        }
 
         if ($sPropName === "todos") {
-
             if (($sComponents = $this->get("components")) !== "") {
                 $aComponents = explode(",", $sComponents);
             } else {
@@ -112,11 +146,10 @@ class Calendar extends \Flake\Core\Model\Db {
                 }
             }
 
-            return parent::set("components", implode(",", $aComponents));
+            return $this->set("components", implode(",", $aComponents));
         }
 
         if ($sPropName === "notes") {
-
             if (($sComponents = $this->get("components")) !== "") {
                 $aComponents = explode(",", $sComponents);
             } else {
@@ -133,7 +166,7 @@ class Calendar extends \Flake\Core\Model\Db {
                 }
             }
 
-            return parent::set("components", implode(",", $aComponents));
+            return $this->set("components", implode(",", $aComponents));
         }
 
         return parent::set($sPropName, $sValue);
@@ -191,7 +224,6 @@ class Calendar extends \Flake\Core\Model\Db {
             "help"  => "If checked, notes will be enabled on this calendar.",
         ]));
 
-
         if ($this->floating()) {
             $oMorpho->element("uri")->setOption(
                 "help",
@@ -208,12 +240,31 @@ class Calendar extends \Flake\Core\Model\Db {
         return $this->get("uri") === "default";
     }
 
+    function hasInstances() {
+        $rSql = $GLOBALS["DB"]->exec_SELECTquery(
+            "count(*)",
+            "calendarinstances",
+            "calendarid" . "='" . $this->aData["calendarid"] . "'"
+        );
+
+        if (($aRs = $rSql->fetch()) === false) {
+            return false;
+        } else {
+            reset($aRs);
+
+            return $aRs["count(*)"] > 1;
+        }
+    }
+
     function destroy() {
-        $oEvents = $this->getEventsBaseRequester()->execute();
-        foreach ($oEvents as $event) {
-            $event->destroy();
+        if (!$this->hasInstances()) {
+            $oEvents = $this->getEventsBaseRequester()->execute();
+            foreach ($oEvents as $event) {
+                $event->destroy();
+            }
         }
 
         parent::destroy();
+        $this->oCalendar->destroy();
     }
 }

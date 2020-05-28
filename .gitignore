@@ -1,6 +1,11 @@
 # logs
 logs
 
+# Specific
+config/baikal.yaml
+config/.htaccess
+Specific/INSTALL_DISABLED
+
 # Composer stuff
 composer.lock
 vendor
@@ -10,3 +15,12 @@ vendor
 
 # Vim
 .*.swp
+
+# Others
+.DS_Store
+
+# IDE
+nbproject
+
+# Tests
+.php_cs.cache

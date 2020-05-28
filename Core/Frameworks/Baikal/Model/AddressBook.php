@@ -1,11 +1,12 @@
 <?php
+
 #################################################################
 #  Copyright notice
 #
 #  (c) 2013 Jérôme Schneider <mail@jeromeschneider.fr>
 #  All rights reserved
 #
-#  http://baikal-server.com
+#  http://sabre.io/baikal
 #
 #  This script is part of the Baïkal Server project. The Baïkal
 #  Server project is free software; you can redistribute it
@@ -23,7 +24,6 @@
 #
 #  This copyright notice MUST APPEAR in all copies of the script!
 #################################################################
-
 
 namespace Baikal\Model;
 
@@ -89,9 +89,8 @@ class AddressBook extends \Flake\Core\Model\Db {
         ]));
 
         $oMorpho->add(new \Formal\Element\Text([
-            "prop"       => "description",
-            "label"      => "Description",
-            "validation" => "required"
+            "prop"  => "description",
+            "label" => "Description"
         ]));
 
         if ($this->floating()) {
@@ -107,7 +106,6 @@ class AddressBook extends \Flake\Core\Model\Db {
     }
 
     function destroy() {
-
         $oContacts = $this->getContactsBaseRequester()->execute();
         foreach ($oContacts as $contact) {
             $contact->destroy();
